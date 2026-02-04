@@ -1,0 +1,216 @@
+{% extends "base.html" %}
+
+{% block title %}Student Dashboard - Face Recognition Attendance System{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h2><i class="fas fa-user-graduate me-2"></i>Student Dashboard</h2>
+    <p class="text-muted">Welcome, {{ current_user.first_name }} {{ current_user.last_name }}</p>
+</div>
+
+<!-- Stats Cards -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card stat-card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h3 class="mb-0">{{ total_classes }}</h3>
+                        <p class="mb-0">Total Classes</p>
+                    </div>
+                    <i class="fas fa-calendar fa-3x opacity-50"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card stat-card success">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h3 class="mb-0">{{ present_count }}</h3>
+                        <p class="mb-0">Present</p>
+                    </div>
+                    <i class="fas fa-check-circle fa-3x opacity-50"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card stat-card danger">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h3 class="mb-0">{{ absent_count }}</h3>
+                        <p class="mb-0">Absent</p>
+                    </div>
+                    <i class="fas fa-times-circle fa-3x opacity-50"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card {% if attendance_percentage >= 75 %}stat-card success{% else %}stat-card warning{% endif %}">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h3 class="mb-0">{{ "%.1f"|format(attendance_percentage) }}%</h3>
+                        <p class="mb-0">Attendance</p>
+                    </div>
+                    <i class="fas fa-percentage fa-3x opacity-50"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- My QR Card -->
+    <div class="col-md-3">
+        <a href="{{ url_for('my_qr') }}" class="card stat-card text-decoration-none" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h3 class="mb-0"><i class="fas fa-qrcode"></i></h3>
+                        <p class="mb-0">My QR Code</p>
+                    </div>
+                </div>
+            </div>
+        </a>
+    </div>
+    
+    <!-- Mark Attendance Card -->
+    <div class="col-md-3">
+        <a href="{{ url_for('qr_attendance') }}" class="card stat-card text-decoration-none" style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); color: white;">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h3 class="mb-0"><i class="fas fa-camera"></i></h3>
+                        <p class="mb-0">Mark Attendance</p>
+                        <small>Camera + Location</small>
+                    </div>
+                </div>
+            </div>
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Subject-wise Attendance -->
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-book me-2"></i>Subject-wise Attendance</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Subject Code</th>
+                                <th>Subject Name</th>
+                                <th>Classes Attended</th>
+                                <th>Total Classes</th>
+                                <th>Percentage</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for code, data in subject_attendance.items() %}
+                            {% set percentage = (data.present / data.total * 100) if data.total > 0 else 0 %}
+                            <tr>
+                                <td><code>{{ code }}</code></td>
+                                <td>{{ data.subject_name }}</td>
+                                <td>{{ data.present }}</td>
+                                <td>{{ data.total }}</td>
+                                <td>
+                                    <div class="progress" style="height: 20px;" role="progressbar" 
+         aria-label="Attendance percentage"
+         aria-valuenow="{{ percentage|default(0) }}">
+     
+        {% if percentage >= 75 %}
+            {% set bar_class = "bg-success" %}
+        {% elif percentage >= 50 %}
+            {% set bar_class = "bg-warning" %}
+        {% else %}
+            {% set bar_class = "bg-danger" %}
+        {% endif %}
+        
+        <div class="progress-bar {{ bar_class }}"
+                role="progressbar"
+                aria-valuenow="{{ percentage|default(0) }}"
+                aria-valuemin="0"
+                aria-valuemax="100">
+            <span class="progress-text">{{ "%.1f"|format(percentage|default(0)) }}%</span>
+        </div>
+    </div>
+                                </td>
+                                <td>
+                                    {% if percentage >= 75 %}
+                                        <span class="badge bg-success">Good</span>
+                                    {% elif percentage >= 50 %}
+                                        <span class="badge bg-warning">Warning</span>
+                                    {% else %}
+                                        <span class="badge bg-danger">Low</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="6" class="text-center text-muted">No attendance records found.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Quick Links -->
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-qrcode me-2"></i>Attendance Options</h5>
+            </div>
+            <div class="card-body">
+                <a href="{{ url_for('my_attendance') }}" class="btn btn-secondary w-100">
+                    <i class="fas fa-list me-2"></i>View Attendance
+                </a>
+            </div>
+        </div>
+        
+        <!-- Alerts Section -->
+<div class="row mb-4">
+    <div class="col-md-6">
+        <a href="{{ url_for('student_alerts') }}" class="card stat-card text-decoration-none" style="background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%); color: white;">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h3 class="mb-0"><i class="fas fa-bell"></i></h3>
+                        <p class="mb-0">View Alerts</p>
+                        {% if alerts_count > 0 %}
+                        <small><span class="badge bg-white text-danger">{{ alerts_count }} new</span></small>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </a>
+    </div>
+</div>
+
+<div class="card mt-3">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>Student Info</h5>
+            </div>
+            <div class="card-body">
+                <p><strong>Student ID:</strong> {{ student.student_id }}</p>
+                <p><strong>Section ID:</strong> {{ student.section_id }}</p>
+                <p><strong>Roll Number:</strong> {{ student.roll_number }}</p>
+                <p><strong>Email:</strong> {{ current_user.email }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

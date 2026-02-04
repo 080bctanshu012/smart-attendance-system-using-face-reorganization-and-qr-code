@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+
+{% block title %}Capture Face - Face Recognition Attendance System{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h2><i class="fas fa-camera me-2"></i>Capture Face</h2>
+    <p class="text-muted">Register face for {{ student.user.first_name }} {{ student.user.last_name }}</p>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-video me-2"></i>Camera Feed</h5>
+            </div>
+            <div class="card-body">
+                <div class="video-container">
+                    <video id="video-feed" autoplay playsinline></video>
+                    <canvas id="capture-canvas" style="display:none;"></canvas>
+                </div>
+                <div class="mt-3 text-center">
+                    <button id="start-camera" class="btn btn-primary me-2">
+                        <i class="fas fa-power-off me-2"></i>Start Camera
+                    </button>
+                    <button id="capture-btn" class="btn btn-success" disabled>
+                        <i class="fas fa-camera me-2"></i>Capture
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0"><i class="fas fa-image me-2"></i>Captured Image</h5>
+            </div>
+            <div class="card-body">
+                <div id="captured-preview" class="text-center" style="min-height: 300px; display: flex; align-items: center; justify-content: center; background: #f8f9fa; border-radius: 8px;">
+                    <p class="text-muted">No image captured yet</p>
+                </div>
+                <form method="POST" id="capture-form" style="display:none;">
+                    <input type="hidden" name="image_data" id="image-data">
+                    <button type="submit" class="btn btn-primary w-100 mt-3" id="save-btn">
+                        <i class="fas fa-save me-2"></i>Save Face
+                    </button>
+                </form>
+            </div>
+        </div>
+        
+        <div class="card mt-3">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>Instructions</h5>
+            </div>
+            <div class="card-body">
+                <ul class="mb-0">
+                    <li>Ensure good lighting conditions</li>
+                    <li>Face the camera directly</li>
+                    <li>Remove glasses or hats if possible</li>
+                    <li>Keep a neutral expression</li>
+                    <li>Stay within the frame</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let video = document.getElementById('video-feed');
+let canvas = document.getElementById('capture-canvas');
+let startBtn = document.getElementById('start-camera');
+let captureBtn = document.getElementById('capture-btn');
+let capturedPreview = document.getElementById('captured-preview');
+let captureForm = document.getElementById('capture-form');
+let imageDataInput = document.getElementById('image-data');
+let saveBtn = document.getElementById('save-btn');
+
+let stream = null;
+
+// Check if we're in a secure context
+function isSecureContext() {
+    return window.isSecureContext;
+}
+
+startBtn.addEventListener('click', async () => {
+    // First check if we're in a secure context
+    if (!isSecureContext()) {
+        alert('Camera access requires a secure context (HTTPS or localhost).\n\nPlease access this page via:\n- http://localhost:5000 (or 127.0.0.1:5000)\n- Or use HTTPS with a valid SSL certificate');
+        return;
+    }
+    
+    try {
+        stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        video.srcObject = stream;
+        startBtn.disabled = true;
+        captureBtn.disabled = false;
+    } catch (err) {
+        console.error('Camera error:', err);
+        if (err.name === 'NotAllowedError') {
+            alert('Camera access denied. Please allow camera permissions in your browser settings.');
+        } else if (err.name === 'NotFoundError') {
+            alert('No camera found. Please connect a camera and try again.');
+        } else if (err.name === 'NotReadableError') {
+            alert('Camera is in use by another application. Please close other apps using the camera.');
+        } else if (err.name === 'OverconstrainedError') {
+            alert('Camera does not support the requested settings.');
+        } else {
+            alert('Error accessing camera: ' + err.message);
+        }
+    }
+});
+
+captureBtn.addEventListener('click', () => {
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    canvas.getContext('2d').drawImage(video, 0, 0);
+    
+    let dataURL = canvas.toDataURL('image/jpeg', 0.8);
+    capturedPreview.innerHTML = `<img src="${dataURL}" style="max-width: 100%; border-radius: 8px;">`;
+    
+    imageDataInput.value = dataURL;
+    captureForm.style.display = 'block';
+    
+    // Stop camera
+    if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+    }
+    startBtn.disabled = false;
+    captureBtn.disabled = true;
+});
+</script>
+{% endblock %}

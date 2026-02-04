@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+
+{% block title %}Alerts - Face Recognition Attendance System{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h2><i class="fas fa-bell me-2"></i>Alerts & Notifications</h2>
+    <p class="text-muted">Stay updated with announcements from your teachers</p>
+</div>
+
+{% if alerts|length == 0 %}
+<div class="alert alert-info">
+    <i class="fas fa-info-circle me-2"></i>
+    No alerts yet. Check back later for announcements from your teachers.
+</div>
+{% else %}
+<div class="row">
+    <div class="col-md-8">
+        {% for alert in alerts %}
+        <div class="card mb-3 {% if alert.alert_type == 'urgent' %}border-danger{% elif alert.alert_type == 'important' %}border-warning{% endif %}">
+            <div class="card-header d-flex justify-content-between align-items-center
+                {% if alert.alert_type == 'urgent' %}bg-danger text-white{% elif alert.alert_type == 'important' %}bg-warning text-dark{% elif alert.alert_type == 'attendance' %}bg-info text-white{% else %}bg-secondary text-white{% endif %}">
+                <div>
+                    <i class="fas fa-bell me-2"></i>
+                    {% if alert.alert_type == 'urgent' %}URGENT{% elif alert.alert_type == 'important' %}IMPORTANT{% elif alert.alert_type == 'attendance' %}Attendance Reminder{% else %}General{% endif %}
+                </div>
+                <small>{{ alert.created_at }}</small>
+            </div>
+            <div class="card-body">
+                <h5 class="card-title">{{ alert.message }}</h5>
+                <p class="card-text text-muted">
+                    <small>From: {{ alert.teacher_name }} {{ alert.teacher_last_name }}</small>
+                </p>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-filter me-2"></i>Alert Types</h5>
+            </div>
+            <div class="card-body">
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span><i class="fas fa-bell text-danger me-2"></i>Urgent</span>
+                        <span class="badge bg-danger rounded-pill">{{ alerts|selectattr('alert_type', 'equalto', 'urgent')|list|length }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span><i class="fas fa-exclamation-triangle text-warning me-2"></i>Important</span>
+                        <span class="badge bg-warning rounded-pill">{{ alerts|selectattr('alert_type', 'equalto', 'important')|list|length }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span><i class="fas fa-calendar-check text-info me-2"></i>Attendance</span>
+                        <span class="badge bg-info rounded-pill">{{ alerts|selectattr('alert_type', 'equalto', 'attendance')|list|length }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span><i class="fas fa-info-circle text-secondary me-2"></i>General</span>
+                        <span class="badge bg-secondary rounded-pill">{{ alerts|selectattr('alert_type', 'equalto', 'general')|list|length }}</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

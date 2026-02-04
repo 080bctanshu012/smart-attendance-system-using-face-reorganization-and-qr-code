@@ -1,0 +1,264 @@
+{% extends "base.html" %}
+
+{% block title %}QR Attendance - Face Recognition Attendance System{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h2><i class="fas fa-qrcode me-2"></i>QR Code Attendance</h2>
+    <p class="text-muted">Scan QR code to mark your attendance at KEC</p>
+</div>
+
+<div class="row justify-content-center" id="qr-page" 
+     data-classroom-lat="{{ campus_lat }}" 
+     data-classroom-lng="{{ campus_lng }}"
+     data-allowed-radius="{{ allowed_radius }}"
+     data-student-id="{{ student_id }}">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-camera me-2"></i>Scan QR Code</h5>
+            </div>
+            <div class="card-body text-center">
+                <div id="qr-reader" style="width: 100%;"></div>
+                <div id="qr-result" class="mt-3" style="display: none;">
+                    <div class="alert alert-success">
+                        <i class="fas fa-check-circle me-2"></i>
+                        <span id="result-text"></span>
+                    </div>
+                </div>
+                <div id="location-status" class="mt-3">
+                    <p class="text-muted"><i class="fas fa-map-marker-alt me-2"></i>Getting your location...</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card mt-3">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>Instructions</h5>
+            </div>
+            <div class="card-body">
+                <ol class="mb-0">
+                    <li><strong>Allow camera and location access</strong> when prompted</li>
+                    <li>Your teacher will display a random QR code for the class</li>
+                    <li>Point camera at the teacher's QR code</li>
+                    <li><strong>You must be within 200m of KEC campus</strong> to mark attendance</li>
+                    <li>If you're out of location, move closer to campus</li>
+                    <li>Attendance will be marked automatically after location verification</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0"><i class="fas fa-map-marked-alt me-2"></i>Your Location</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <p><strong><i class="fas fa-graduation-cap me-2"></i>Kantipur Engineering College</strong></p>
+                    <p class="text-muted">Dhapakhel, Lalitpur</p>
+                </div>
+                <hr>
+                <div class="row">
+                    <div class="col-6">
+                        <p><strong>Latitude:</strong><br><span id="lat" class="text-muted">Getting...</span></p>
+                    </div>
+                    <div class="col-6">
+                        <p><strong>Longitude:</strong><br><span id="lng" class="text-muted">Getting...</span></p>
+                    </div>
+                </div>
+                <p><strong>Distance from campus:</strong><br><span id="distance" class="text-muted">Calculating...</span></p>
+                <p><strong>Accuracy:</strong><br><span id="accuracy" class="text-muted">...</span></p>
+            </div>
+        </div>
+        
+        <div class="card mt-3">
+            <div class="card-header bg-warning text-dark">
+                <h5 class="mb-0"><i class="fas fa-exclamation-triangle me-2"></i>Campus Location</h5>
+            </div>
+            <div class="card-body">
+                <p><strong>Kantipur Engineering College</strong></p>
+                <p class="mb-0">Dhapakhel, Lalitpur</p>
+                <p class="text-muted small">GPS: 27.6635°N, 85.3161°E</p>
+                <div class="alert alert-info mt-2 mb-0">
+                    <i class="fas fa-info-circle me-2"></i>
+                    You must be within <strong>200 meters</strong> of the college to mark attendance.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- QR Code Scanner Library -->
+<script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+
+<script>
+var html5QrcodeScanner;
+var userLat, userLng;
+var classroomLat = 27.6635;
+var classroomLng = 85.3161;
+var allowedRadius = 200;
+var studentId = 0;
+
+// Get configuration from data attributes
+document.addEventListener('DOMContentLoaded', function() {
+    var pageData = document.getElementById('qr-page');
+    if (pageData) {
+        classroomLat = parseFloat(pageData.dataset.classroomLat) || 27.6635;
+        classroomLng = parseFloat(pageData.dataset.classroomLng) || 85.3161;
+        allowedRadius = parseInt(pageData.dataset.allowedRadius) || 200;
+        studentId = parseInt(pageData.dataset.studentId) || 0;
+    }
+    initApp();
+});
+
+function initApp() {
+    getLocation();
+    initScanner();
+}
+
+// Update location displays
+function updateLocationDisplay(lat, lng, accuracy) {
+    document.getElementById('lat').textContent = lat.toFixed(6);
+    document.getElementById('lng').textContent = lng.toFixed(6);
+    document.getElementById('accuracy').textContent = '±' + accuracy + ' meters';
+    userLat = lat;
+    userLng = lng;
+    
+    // Calculate distance
+    var distance = getDistanceFromLatLonInMeters(lat, lng, classroomLat, classroomLng);
+    var isWithinRadius = distance <= allowedRadius;
+    
+    var distanceEl = document.getElementById('distance');
+    distanceEl.innerHTML = distance.toFixed(0) + ' meters ' + 
+        (isWithinRadius ? 
+            '<span class="badge bg-success">Within campus!</span>' : 
+            '<span class="badge bg-danger">Outside campus!</span>');
+}
+
+// Get user location
+function getLocation() {
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(function(position) {
+            updateLocationDisplay(
+                position.coords.latitude,
+                position.coords.longitude,
+                position.coords.accuracy
+            );
+            document.getElementById('location-status').innerHTML = 
+                '<p class="text-success"><i class="fas fa-check-circle me-2"></i>Location acquired! You are at KEC campus.</p>';
+        }, function(error) {
+            document.getElementById('location-status').innerHTML = 
+                '<p class="text-danger"><i class="fas fa-times-circle me-2"></i>Location error: ' + error.message + '</p>';
+            document.getElementById('lat').textContent = 'Not available';
+            document.getElementById('lng').textContent = 'Not available';
+        }, {
+            enableHighAccuracy: true,
+            timeout: 10000,
+            maximumAge: 60000
+        });
+    } else {
+        document.getElementById('location-status').innerHTML = 
+            '<p class="text-danger"><i class="fas fa-times-circle me-2"></i>Geolocation not supported</p>';
+    }
+}
+
+// Calculate distance between two points
+function getDistanceFromLatLonInMeters(lat1, lon1, lat2, lon2) {
+    var R = 6371000;
+    var dLat = (lat2 - lat1) * Math.PI / 180;
+    var dLon = (lon2 - lon1) * Math.PI / 180;
+    var a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+            Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+            Math.sin(dLon/2) * Math.sin(dLon/2);
+    var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    return R * c;
+}
+
+// Initialize QR scanner
+function initScanner() {
+    html5QrcodeScanner = new Html5QrcodeScanner(
+        "qr-reader", 
+        { fps: 10, qrbox: { width: 280, height: 280 } },
+        false
+    );
+    
+    html5QrcodeScanner.render(onScanSuccess, onScanFailure);
+}
+
+// Handle QR scan success
+function onScanSuccess(decodedText, decodedResult) {
+    try {
+        var data = JSON.parse(decodedText);
+        
+        if (data.type === 'attendance_session' && data.session_code) {
+            // Check if within campus
+            var distance = getDistanceFromLatLonInMeters(userLat, userLng, classroomLat, classroomLng);
+            var isWithinRadius = distance <= allowedRadius;
+            
+            if (!userLat || !userLng) {
+                document.getElementById('result-text').textContent = 
+                    'Location not available! Please enable location services.';
+                document.getElementById('qr-result').className = 'mt-3 alert alert-warning';
+                document.getElementById('qr-result').style.display = 'block';
+                return;
+            }
+            
+            if (!isWithinRadius) {
+                document.getElementById('result-text').textContent = 
+                    "❌ You're out of location! You are " + Math.round(distance) + "m away from campus (max: " + allowedRadius + "m). Please move closer to KEC campus.";
+                document.getElementById('qr-result').className = 'mt-3 alert alert-danger';
+                document.getElementById('qr-result').style.display = 'block';
+                return;
+            }
+            
+            var formData = new FormData();
+            formData.append('student_id', studentId);
+            formData.append('session_code', data.session_code);
+            formData.append('latitude', userLat);
+            formData.append('longitude', userLng);
+            
+            fetch('/student/mark-qr-attendance', {
+                method: 'POST',
+                body: formData
+            })
+            .then(function(response) { return response.json(); })
+            .then(function(data) {
+                if (data.success) {
+                    document.getElementById('result-text').textContent = 
+                        '✅ ' + data.message;
+                    document.getElementById('qr-result').className = 'mt-3 alert alert-success';
+                } else {
+                    document.getElementById('result-text').textContent = 
+                        '❌ ' + (data.message || 'Error marking attendance');
+                    document.getElementById('qr-result').className = 'mt-3 alert alert-danger';
+                }
+                document.getElementById('qr-result').style.display = 'block';
+            })
+            .catch(function(error) {
+                document.getElementById('result-text').textContent = 
+                    '❌ Error: ' + error.message;
+                document.getElementById('qr-result').className = 'mt-3 alert alert-danger';
+                document.getElementById('qr-result').style.display = 'block';
+            });
+        } else {
+            document.getElementById('result-text').textContent = 
+                'Invalid QR code. Please scan the attendance QR code from your teacher.';
+            document.getElementById('qr-result').className = 'mt-3 alert alert-warning';
+            document.getElementById('qr-result').style.display = 'block';
+        }
+    } catch (e) {
+        document.getElementById('result-text').textContent = 
+            'Invalid QR code format';
+        document.getElementById('qr-result').className = 'mt-3 alert alert-warning';
+        document.getElementById('qr-result').style.display = 'block';
+    }
+}
+
+// Handle QR scan failure
+function onScanFailure(error) {
+    // Ignore scan failures
+}
+</script>
+{% endblock %}

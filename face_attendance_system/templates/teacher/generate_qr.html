@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+
+{% block title %}Generate QR Code - Face Recognition Attendance System{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h2><i class="fas fa-qrcode me-2"></i>Generate Attendance QR</h2>
+    <p class="text-muted">Create a new random QR code for each class session</p>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-cog me-2"></i>QR Code Settings</h5>
+            </div>
+            <div class="card-body">
+                <form action="{{ url_for('show_qr_code') }}" method="GET">
+                    <div class="mb-3">
+                        <label class="form-label">Subject</label>
+                        <select class="form-select" name="subject_id" required>
+                            <option value="">Select Subject</option>
+                            {% for subject in subjects %}
+                            <option value="{{ subject.id }}">{{ subject.subject_code }} - {{ subject.subject_name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Section</label>
+                        <select class="form-select" name="section_id" required>
+                            <option value="">Select Section</option>
+                            {% for section in sections %}
+                            <option value="{{ section.id }}">{{ section.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">QR Code Expiry (minutes)</label>
+                        <select class="form-select" name="expiry">
+                            <option value="5">5 minutes</option>
+                            <option value="15">15 minutes</option>
+                            <option value="30">30 minutes</option>
+                            <option value="60">1 hour</option>
+                            <option value="120">2 hours</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-qrcode me-2"></i>Generate QR Code
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>How to Use</h5>
+            </div>
+            <div class="card-body">
+                <ol class="mb-0">
+                    <li>Select the subject and section</li>
+                    <li>Set QR expiry time (for this class)</li>
+                    <li>Click "Generate QR Code"</li>
+                    <li><strong>A new random QR code is created for each class</strong></li>
+                    <li>Display the QR code on your screen during class</li>
+                    <li>Students scan with their mobile devices</li>
+                    <li>Students must be within 200m of KEC campus</li>
+                </ol>
+            </div>
+        </div>
+        
+        <div class="card mt-3">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0"><i class="fas fa-mobile-alt me-2"></i>Student Instructions</h5>
+            </div>
+            <div class="card-body">
+                <p>Students should:</p>
+                <ul>
+                    <li>Login to the attendance system</li>
+                    <li>Go to "Mark Attendance" page</li>
+                    <li>Allow camera and location access</li>
+                    <li>Scan the QR code displayed by the teacher</li>
+                    <li>If "You're out of location" appears, move closer to campus</li>
+                    <li>Attendance only marks if within 200m of KEC</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+
+{% block title %}Teacher Dashboard - Face Recognition Attendance System{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h2><i class="fas fa-chalkboard-teacher me-2"></i>Teacher Dashboard</h2>
+    <p class="text-muted">Welcome, {{ current_user.first_name }} {{ current_user.last_name }}</p>
+</div>
+
+<!-- Quick Actions -->
+<div class="row mb-4">
+    <div class="col-md-4">
+        <a href="{{ url_for('generate_qr') }}" class="card stat-card text-decoration-none">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h3 class="mb-0"><i class="fas fa-qrcode"></i></h3>
+                        <p class="mb-0">Generate QR</p>
+                        <small class="text-muted">New random QR per class</small>
+                    </div>
+                </div>
+            </div>
+        </a>
+    </div>
+    <div class="col-md-4">
+        <a href="{{ url_for('take_attendance') }}" class="card stat-card text-decoration-none" style="background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%); color: white;">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h3 class="mb-0"><i class="fas fa-user-check"></i></h3>
+                        <p class="mb-0">Face Recognition</p>
+                    </div>
+                </div>
+            </div>
+        </a>
+    </div>
+    <div class="col-md-4">
+        <a href="{{ url_for('add_class') }}" class="card stat-card text-decoration-none" style="background: linear-gradient(135deg, #3498db 0%, #2980b9 100%); color: white;">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h3 class="mb-0"><i class="fas fa-calendar-plus"></i></h3>
+                        <p class="mb-0">Add Class/Time</p>
+                    </div>
+                </div>
+            </div>
+        </a>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-3">
+        <a href="{{ url_for('teacher_reports') }}" class="card stat-card text-decoration-none" style="background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%); color: white;">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h3 class="mb-0"><i class="fas fa-chart-bar"></i></h3>
+                        <p class="mb-0">View Reports</p>
+                    </div>
+                </div>
+            </div>
+        </a>
+    </div>
+    <div class="col-md-3">
+        <a href="{{ url_for('send_alerts') }}" class="card stat-card text-decoration-none" style="background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%); color: white;">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h3 class="mb-0"><i class="fas fa-bell"></i></h3>
+                        <p class="mb-0">Send Alerts</p>
+                    </div>
+                </div>
+            </div>
+        </a>
+    </div>
+    <div class="col-md-3">
+        <a href="#" class="card stat-card text-decoration-none" style="background: linear-gradient(135deg, #f39c12 0%, #d68910 100%); color: white;" onclick="alert('Timetable feature coming soon!'); return false;">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h3 class="mb-0"><i class="fas fa-clock"></i></h3>
+                        <p class="mb-0">Timetable</p>
+                    </div>
+                </div>
+            </div>
+        </a>
+    </div>
+</div>
+
+{% endblock %}
